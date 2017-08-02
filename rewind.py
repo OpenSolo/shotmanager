@@ -19,6 +19,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+
+# ************************************************************
+# *                                                          *
+# *  Solo Pixhawk 2.1 Green Cube and ArduCopter 3.5 Upgrade  *
+# *                                                          *
+# ************************************************************
+# Updated July 29, 2017 by Matt Lawrence to be compatible with
+# the Pixhawk 2.1 Green Cube and ArduCopter 3.5+
+# - When exiting rewind, use ArduCopter RTL instead of returnHome.py smart shot
+#
+
+
+
+
 from dronekit import Vehicle, LocationGlobalRelative, VehicleMode
 from pymavlink import mavutil
 import os
@@ -149,7 +163,7 @@ class RewindShot():
 
     def exitRewind(self):
         self.rewindManager.resetSpline()
-        self.shotmgr.enterShot(shots.APP_SHOT_RTL)
+        self.vehicle.mode = VehicleMode("RTL")
 
         
     def travel(self):

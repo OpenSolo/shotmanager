@@ -3,6 +3,17 @@
 # It also handles all communication to Artoo
 #
 
+# ************************************************************
+# *                                                          *
+# *  Solo Pixhawk 2.1 Green Cube and ArduCopter 3.5 Upgrade  *
+# *                                                          *
+# ************************************************************
+# Updated July 29, 2017 by Matt Lawrence to be compatible with 
+# the Pixhawk 2.1 Green Cube and ArduCopter 3.5+
+#  - Changed home button press from returnHome.py smart shot to ArduCopter RTL mode
+#
+
+
 import errno
 import os
 import platform
@@ -264,7 +275,7 @@ class buttonManager():
             if self.shotMgr.currentShot == shots.APP_SHOT_RTL:
                 self.shotMgr.curController.handleButton(button, event)
             elif event == btn_msg.Press:
-                self.shotMgr.enterShot(shots.APP_SHOT_RTL)
+		self.shotMgr.vehicle.mode = VehicleMode("RTL") #Places Pixhawk into ArduCopter RTL mode
 
         if button == btn_msg.ButtonCameraClick and event == btn_msg.Press:
             self.shotMgr.goproManager.handleRecordCommand(self.shotMgr.goproManager.captureMode, RECORD_COMMAND_TOGGLE)

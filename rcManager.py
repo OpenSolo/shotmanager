@@ -15,6 +15,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+# ************************************************************
+# *                                                          *
+# *  Solo Pixhawk 2.1 Green Cube and ArduCopter 3.5 Upgrade  *
+# *                                                          *
+# ************************************************************
+# Updated July 29, 2017 by Matt Lawrence to be compatible with 
+# the Pixhawk 2.1 Green Cube and ArduCopter 3.5+
+# - Changed radio failsafe output on CH3 from DEFAULT_RC_MID to THROTTLE_FAILSAFE.
+#   Puts Pixhawk into Radio Failsafe rather than relying on IMX or smart shots
+#
+
+
 import os
 import socket
 import sys
@@ -132,7 +144,7 @@ class rcManager():
     def remap(self):
         if self.failsafe or self.channels == None:
             # send default values to the Pixhawk
-            self.channels = [DEFAULT_RC_MID, DEFAULT_RC_MID, DEFAULT_RC_MID, DEFAULT_RC_MID, DEFAULT_RC_MIN, CHANNEL6_MAX, DEFAULT_RC_MIN, CHANNEL8_MID ]
+            self.channels = [DEFAULT_RC_MID, DEFAULT_RC_MID, THROTTLE_FAILSAFE, DEFAULT_RC_MID, DEFAULT_RC_MIN, CHANNEL6_MAX, DEFAULT_RC_MIN, CHANNEL8_MID ]
 
         normChannels = [0]*8
 

@@ -1,6 +1,18 @@
 #
 # This is the entry point for shotmanager on Solo using Dronekit-Python
 
+# ************************************************************
+# *                                                          *
+# *  Solo Pixhawk 2.1 Green Cube and ArduCopter 3.5 Upgrade  *
+# *                                                          *
+# ************************************************************
+# Updated July 29, 2017 by Matt Lawrence to be compatible with the Pixhawk 2.1 Green Cube and ArduCopter 3.5+
+# - If copter is in ArduCopter RTL mode, it will no longer switch the returnHome.py smart shot
+# - If radio contact lost, enter ArduCopter RTL mode instead of returnHome.py
+# - Disables using rewind as part of failsafes
+#
+
+
 # Python native imports
 import os
 from os import sys, path
@@ -296,11 +308,7 @@ class ShotManager():
             if mode.name != self.lastMode:
                 logger.log("[callback]: Mode changed from %s -> %s"%(self.lastMode, mode.name))
                 
-                if mode.name == 'RTL':
-                    logger.log("[callback]: System entered RTL, switch to shot!")
-                    self.enterShot(shots.APP_SHOT_RTL)
-
-                elif self.currentShot != shots.APP_SHOT_NONE:
+                if self.currentShot != shots.APP_SHOT_NONE:
                     # looks like somebody switched us out of guided!  Exit our current shot
                     if mode.name not in shots.SHOT_MODES:
                         logger.log("[callback]: Detected that we are not in the correct apm mode for this shot. Exiting shot!")
@@ -459,10 +467,7 @@ class ShotManager():
         if self.currentShot == shots.APP_SHOT_REWIND:
             self.curController.exitToRTL = True
             return
-            
-        if self.currentShot == shots.APP_SHOT_RTL:
-            return
-        
+
         if self.last_ekf_ok is False:
             # no GPS - force an emergency land
             self.vehicle.mode = VehicleMode("LAND")
@@ -472,12 +477,8 @@ class ShotManager():
         if self.vehicle.mode.name == 'AUTO' and self.rewindManager.fs_thr == 2:
             return
     
-        if self.rewindManager.enabled:
-            self.enterShot(shots.APP_SHOT_REWIND)
-            self.curController.exitToRTL = True
-            
         else:
-            self.enterShot(shots.APP_SHOT_RTL)
+            self.vehicle.mode = VehicleMode("RTL")
 
 
     def registerCallbacks(self):
