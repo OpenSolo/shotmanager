@@ -10,14 +10,23 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#
 #  http://www.apache.org/licenses/LICENSE-2.0
-#
+
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+
+# ************************************************************
+# *                                                          *
+# *  Solo Pixhawk 2.1 Green Cube and ArduCopter 3.5 Upgrade  *
+# *                                                          *
+# ************************************************************
+#
+# Updated July 29, 2017 by Matt Lawrence to be compatible with the Pixhawk 2.1 Green Cube and ArduCopter 3.5+
+# - Added use of MAV_CMD_CONDITION_YAW to control copter yaw during smart shots since MSG_MOUNT_CONTROL seems to be broken in ArduCopter 3.5
+#
 
 from dronekit import Vehicle, LocationGlobalRelative, VehicleMode
 
@@ -616,42 +625,57 @@ class FollowShot():
         # if we do have a gimbal, use mount_control to set pitch and yaw
         if self.vehicle.mount_status[0] is not None:
             msg = self.vehicle.message_factory.mount_control_encode(
-                        0, 1,    # target system, target component
-                        # pitch is in centidegrees
-                        self.camPitch * 100,
-                        0.0, # roll
-                        # yaw is in centidegrees
-                        self.camYaw * 100,
-                        0 # save position
-                        )
+                    0, 1,    # target system, target component
+                    # pitch is in centidegrees
+                    self.camPitch * 100,
+                    0.0, # roll
+                    # yaw is in centidegrees
+                    0, #self.camYaw * 100, (Disabled by Matt due to ArduCopter master mount_control problem)
+                    0 # save position
+            )
+            self.vehicle.send_mavlink(msg)
+            
+            # Use MAV_CMD_CONDITION_YAW since the yaw in MSG_MOUNT_CONTROL is not working in AC35
+            msg = self.vehicle.message_factory.command_long_encode(
+                    0, 0,    # target system, target component
+                    mavutil.mavlink.MAV_CMD_CONDITION_YAW, #command
+                    0, #confirmation
+                    self.camYaw,  # param 1 - target angle
+                    YAW_SPEED, # param 2 - yaw speed
+                    self.camDir, # param 3 - direction
+                    0.0, # relative offset
+                    0, 0, 0 # params 5-7 (unused)
+            )
+            self.vehicle.send_mavlink(msg)
+                        
         else:
             # if we don't have a gimbal, just set CONDITION_YAW
             msg = self.vehicle.message_factory.command_long_encode(
-                        0, 0,    # target system, target component
-                        mavutil.mavlink.MAV_CMD_CONDITION_YAW, #command
-                        0, #confirmation
-                        self.camYaw,  # param 1 - target angle
-                        YAW_SPEED, # param 2 - yaw speed
-                        self.camDir, # param 3 - direction
-                        0.0, # relative offset
-                        0, 0, 0 # params 5-7 (unused)
-                        )
-        self.vehicle.send_mavlink(msg)
+                    0, 0,    # target system, target component
+                    mavutil.mavlink.MAV_CMD_CONDITION_YAW, #command
+                    0, #confirmation
+                    self.camYaw,  # param 1 - target angle
+                    YAW_SPEED, # param 2 - yaw speed
+                    self.camDir, # param 3 - direction
+                    0.0, # relative offset
+                    0, 0, 0 # params 5-7 (unused)
+            )
+            self.vehicle.send_mavlink(msg)
 
         
     def handleLookAtPointing(self, tempROI):
         # set ROI
         msg = self.vehicle.message_factory.command_int_encode(
-                    0, 1,    # target system, target component
-                    mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, #frame
-                    mavutil.mavlink.MAV_CMD_DO_SET_ROI, #command
-                    0, #current
-                    0, #autocontinue
-                    0, 0, 0, 0, #params 1-4
-                    tempROI.lat*1.E7,
-                    tempROI.lon*1.E7,
-                    tempROI.alt + self.ROIAltitudeOffset #offset for ROI
-                    )
+                0, 1,    # target system, target component
+                mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, #frame
+                mavutil.mavlink.MAV_CMD_DO_SET_ROI, #command
+                0, #current
+                0, #autocontinue
+                0, 0, 0, 0, #params 1-4
+                tempROI.lat*1.E7,
+                tempROI.lon*1.E7,
+                tempROI.alt + self.ROIAltitudeOffset #offset for ROI
+        )
 
         # send pointing message
         self.vehicle.send_mavlink(msg)
