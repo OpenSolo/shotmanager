@@ -25,6 +25,10 @@ MODE_NAMES = {
     19 : 'ADS-B AVOID\0',
     20 : 'GUIDED NO GPS\0',
     21 : 'SMART RTL\0', 
+    22 : 'FBWA\0', 
+    23 : 'FBWB\0', 
+    24 : 'Cruise\0', 
+    25 : 'Training\0',
     }
 
 # DroneKit uses APM's mode names.  Here is a helper function to
